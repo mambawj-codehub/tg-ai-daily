@@ -1,0 +1,6 @@
+# Telegram 频道配置
+# username: 频道用户名或链接
+# label: 中文标签，用于摘要中展示
+channels:
+  # - username: "@example_channel"
+  #   label: "示例频道"
