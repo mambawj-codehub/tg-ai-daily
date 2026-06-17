@@ -1,5 +1,6 @@
 .env
 *.session
 data/raw/
+superpowers/
 __pycache__/
 *.pyc
