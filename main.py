@@ -2,14 +2,17 @@
 tg-ai-daily — Telegram 频道日报生成工具
 
 Usage:
-    python main.py              # 拉取过去 24h 消息并生成日报
-    python main.py --hours 48   # 拉取过去 48h 消息
+    python main.py                    # OpenAI 拉取 24h 消息
+    python main.py --provider gemini  # Gemini 拉取 24h 消息
+    python main.py --hours 48         # 拉取最近 48h
 """
 
+import os
 import sys
 import asyncio
 import argparse
 from datetime import datetime, timezone
+from dotenv import load_dotenv
 
 from src.fetcher import fetch_messages, load_channels
 from src.dedup import deduplicate
@@ -17,11 +20,15 @@ from src.filter import filter_ads
 from src.summarizer import generate_summary
 from src.storage import save_raw_messages, save_summary
 
+load_dotenv()
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Telegram 频道日报生成工具")
     parser.add_argument("--hours", type=int, default=24, help="拉取最近多少小时的消息 (默认: 24)")
     parser.add_argument("--config", type=str, default="config/channels.yaml", help="频道配置文件路径")
+    parser.add_argument("--provider", type=str, default=os.getenv("AI_PROVIDER", "openai"),
+                        choices=["openai", "gemini"], help="AI 提供商: openai 或 gemini (默认: 环境变量 AI_PROVIDER)")
     return parser.parse_args()
 
 
@@ -61,8 +68,9 @@ async def main():
     print(f"[INFO] 原始数据已保存: {raw_path}")
 
     # Step 6: 生成摘要
-    print(f"[INFO] 正在调用 OpenAI 生成 {today} 日报...")
-    summary_md = generate_summary(messages, today)
+    provider = args.provider
+    print(f"[INFO] 正在调用 {provider.upper()} 生成 {today} 日报...")
+    summary_md = generate_summary(messages, today, provider=provider)
 
     # Step 7: 保存摘要
     summary_path = save_summary(summary_md, today)
